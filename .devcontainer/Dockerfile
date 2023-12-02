@@ -7,6 +7,12 @@ USER root
 
 ENV NODE_VERSION=16 
 
+RUN apt update && \
+    apt install -y \
+    default-mysql-client \
+    gdb \
+    net-tools
+
 RUN apt-get update -q \
     && apt-get install -yq \
     iputils-ping \
