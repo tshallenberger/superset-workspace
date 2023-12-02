@@ -25,7 +25,7 @@
     // Connect as root to install things in the container
     // Connect as some other user for more realistic env. 
     // More info: https://aka.ms/vscode-remote/containers/non-root.
-    "remoteUser": "superset",
+    "remoteUser": "",
     "customizations": {
         "vscode": {
             "extensions": [
