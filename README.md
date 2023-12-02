@@ -30,7 +30,7 @@ GRANT ALL PRIVILEGES ON *.* TO superset@'%' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON *.* TO superset@localhost WITH GRANT OPTION;
 "
 
-# Run superset migrations, init roles, add admin user
+# Run superset migrations, init roles, add admin user, load examples
 superset db upgrade
 superset init
 superset fab create-admin \
@@ -39,6 +39,7 @@ superset fab create-admin \
     --firstname Admin \
     --lastname Admin \
     --email admin@superset.com
+superset load_examples --force
 ```
 
 ## Tools/Scripts
@@ -60,16 +61,3 @@ Check if db has migrations applied
 Apply current migrations to db
 
 ## Scripts
-
-```bash
-
-superset db upgrade
-superset init
-superset fab create-admin \
-  --username admin \
-  --password admin \
-  --firstname Superset \
-  --lastname Admin \
-  --email admin@superset.com
-              
-```
