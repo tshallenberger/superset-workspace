@@ -7,8 +7,8 @@
     "workspaceFolder": "/workspace",
     "containerEnv": {
         "PYTHONPATH": "$PYTHONPATH:/workspace/extensions",
-        "WORKSPACE_SCRIPTS": "/workspace/scripts"
-        // "WORKSPACE_EXPORTS": "/workspace/exports",
+        "WORKSPACE_PATH":"${containerWorkspaceFolder}",
+        "SUPERSET_PATH":"${containerWorkspaceFolder}/superset"
     },
     "remoteEnv": {},
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -25,21 +25,21 @@
     // Connect as root to install things in the container
     // Connect as some other user for more realistic env. 
     // More info: https://aka.ms/vscode-remote/containers/non-root.
-    "remoteUser": "",
+    "remoteUser": "superset",
     "customizations": {
         "vscode": {
             "extensions": [
-				"ms-azuretools.vscode-docker",
-				"ms-python.python",
-				"KevinRose.vsc-python-indent",
-				"mutantdino.resourcemonitor",
-				"IronGeek.vscode-env",
-				"file-icons.file-icons",
-				"esbenp.prettier-vscode",
-				"yzhang.markdown-all-in-one",
-				"ms-python.black-formatter",
-				"DavidAnson.vscode-markdownlint"
-			],
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "KevinRose.vsc-python-indent",
+                "mutantdino.resourcemonitor",
+                "IronGeek.vscode-env",
+                "file-icons.file-icons",
+                "esbenp.prettier-vscode",
+                "yzhang.markdown-all-in-one",
+                "ms-python.black-formatter",
+                "DavidAnson.vscode-markdownlint"
+            ],
             "settings": {
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "python.formatting.provider": "black",
