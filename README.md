@@ -1,10 +1,18 @@
 # Superset Workspace
 
-A workspace for developing Apache Superset.
+A workspace for developing a separate fork of Apache Superset.
+
+## Bugs
+
+`superset-frontend` won't build with following enabled in Docker on a Macbook M3:
+
+`Rosetta for x86/amd64 emulation on Apple Silicon`
 
 ## Setup
 
-Open workspace in VS Code, then select `Open in container`
+Open workspace in VS Code, then select `Dev Containers: Rebuild and Reopen in container`
+
+This should spin up a docker-compose project called `superset_workspace` with child containers: `app`, `db` `redis`
 
 Once the container is built, follow these steps to pull/build Superset:
 
@@ -34,11 +42,11 @@ GRANT ALL PRIVILEGES ON *.* TO superset@localhost WITH GRANT OPTION;
 superset db upgrade
 superset init
 superset fab create-admin \
-    --username admin \
-    --password admin \
-    --firstname Admin \
-    --lastname Admin \
-    --email admin@superset.com
+  --username admin \
+  --password admin \
+  --firstname Admin \
+  --lastname Admin \
+  --email admin@superset.com
 superset load_examples --force
 ```
 
@@ -56,8 +64,3 @@ docker inspect superset_workspace_app-nw \
 | del(.Name, .IPv4Address)'
 
 ```
-
-Check if db has migrations applied
-Apply current migrations to db
-
-## Scripts
