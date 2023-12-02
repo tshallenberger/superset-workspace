@@ -2,7 +2,9 @@
 
 A devcontainer setup for developing Apache Superset.
 
-## Connections
+## Bugs
+
+superset-frontend won't build on `Rosetta for x86/amd64 emulation on Apple Silicon`
 
 ## Helpers
 

@@ -31,6 +31,22 @@ def get_env_variable(var_name: str, default: Optional[str] = None) -> str:
             raise EnvironmentError(error_msg)
 
 
+class SampleMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        # not Flask request - from werkzeug.wrappers import Request
+        request = Request(environ)
+        if request.path == "/login":
+            print("[DEBUG] path: %s, url: %s" % (request.path, request.url))
+            pprint.pprint(request)
+            pprint.pprint(environ)
+        return self.app(environ, start_response)
+
+
+ADDITIONAL_MIDDLEWARE = [SampleMiddleware]
+
 WTF_CSRF_ENABLED = False
 SESSION_COOKIE_HTTPONLY = False  # Prevent cookie from being read by frontend JS?
 SESSION_COOKIE_SECURE = False  # Prevent cookie from being transmitted over non-tls?
@@ -88,24 +104,15 @@ SQLALCHEMY_DATABASE_URI = "%s://%s:%s@%s:%s/%s" % (
 
 print("[DEBUG] SQLALCHEMY_DATABASE_URI: " + str(SQLALCHEMY_DATABASE_URI))
 
-
-# SSL_KEY_FILE = get_env_variable("SSL_KEY_FILE")
-# SSL_CERT_FILE = get_env_variable("SSL_CERT_FILE")
-# SSL_CERT_PATH = get_env_variable("SSL_CERT_PATH")
-
-# print("[DEBUG] SSL_KEY_FILE: " + str(SSL_KEY_FILE))
-# print("[DEBUG] SSL_CERT_FILE: " + str(SSL_CERT_FILE))
-# print("[DEBUG] SSL_CERT_PATH: " + str(SSL_CERT_PATH))
-
 # Initialize Redis config
 REDIS_HOST = get_env_variable("REDIS_HOST")
 REDIS_PORT = get_env_variable("REDIS_PORT")
 REDIS_CELERY_DB = get_env_variable("REDIS_CELERY_DB", "0")
 REDIS_RESULTS_DB = get_env_variable("REDIS_RESULTS_DB", "1")
 
-RESULTS_BACKEND = FileSystemCache("/app/superset_home/sqllab")
-
 REDIS_DATABASE_URI = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+
+RESULTS_BACKEND = FileSystemCache("/app/superset_home/sqllab")
 
 print("[DEBUG] REDIS_DATABASE_URI: " + str(REDIS_DATABASE_URI))
 
@@ -140,19 +147,19 @@ FEATURE_FLAGS = {
     "ENABLE_TEMPLATE_PROCESSING": True,
 }
 
-if SUPERSET_ENV == "prod":
-    FILTER_STATE_CACHE_CONFIG = {
-        "CACHE_TYPE": "RedisCache",
-        "CACHE_DEFAULT_TIMEOUT": 86400,
-        "CACHE_KEY_PREFIX": "superset_filter_cache",
-        "CACHE_REDIS_URL": f"{REDIS_DATABASE_URI}/0",
-    }
-    DATA_CACHE_CONFIG = {
-        "CACHE_TYPE": "RedisCache",
-        "CACHE_KEY_PREFIX": "superset_results",  # make sure this string is unique to avoid collisions
-        "CACHE_DEFAULT_TIMEOUT": 86400,  # 60 seconds * 60 minutes * 24 hours
-        "CACHE_REDIS_URL": f"{REDIS_DATABASE_URI}/0",
-    }
+# if SUPERSET_ENV == "prod":
+FILTER_STATE_CACHE_CONFIG = {
+    "CACHE_TYPE": "RedisCache",
+    "CACHE_DEFAULT_TIMEOUT": 86400,
+    "CACHE_KEY_PREFIX": "superset_filter_cache",
+    "CACHE_REDIS_URL": f"{REDIS_DATABASE_URI}/0",
+}
+DATA_CACHE_CONFIG = {
+    "CACHE_TYPE": "RedisCache",
+    "CACHE_KEY_PREFIX": "superset_results",  # make sure this string is unique to avoid collisions
+    "CACHE_DEFAULT_TIMEOUT": 86400,  # 60 seconds * 60 minutes * 24 hours
+    "CACHE_REDIS_URL": f"{REDIS_DATABASE_URI}/0",
+}
 
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = True
 WEBDRIVER_BASEURL = "http://superset:8088/"
