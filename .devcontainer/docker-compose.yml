@@ -22,12 +22,6 @@ services:
       - .vscode:/workspace/.vscode:cached
       # Mount docker.sock in order to run docker from this docker dev container
       - /var/run/docker.sock:/var/run/docker.sock
-      # mounts the local tls certs folder
-      # - ../tls:/app/tls:cached
-      # mounts the data exports folder
-      # - $HOME/.exports:/workspace/.exports:cached
-      # mounts the local certs folder
-      # - $HOME/.certs:/app/certs:cached
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
     # Use a shared network to connect with other containers
@@ -40,6 +34,7 @@ services:
     image: mysql:8.0
     container_name: db
     restart: unless-stopped
+    # Use workspace directory to hold db data
     volumes:
       - .mysql:/var/lib/mysql
     env_file: .env
@@ -52,6 +47,7 @@ services:
     container_name: redis
     restart: unless-stopped
     env_file: .env
+    # Use workspace directory to hold redis data
     volumes:
       - .redis:/var/lib/redis
     networks:
