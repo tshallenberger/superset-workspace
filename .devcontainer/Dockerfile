@@ -1,5 +1,5 @@
 ARG BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
-ARG SUPERSET_VER=3.0.1
+ARG SUPERSET_VER=3.0.2
 
 FROM --platform=linux/amd64 apache/superset:${SUPERSET_VER}-dev
 
@@ -33,6 +33,7 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y docker-ce-cli
 
+RUN pip install --upgrade pip
 # Install python formatter
 RUN pip install black
 # RUN pip install authlib \
@@ -49,13 +50,13 @@ RUN pip install mysql-connector-python
 #     pyodbc \
 #     redis
 
-    RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 ENV NVM_DIR=/root/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && \
     nvm use v${NODE_VERSION} && \
     npm i -g yarn pnpm
 
-USER superset
+USER root
 
 EXPOSE ${SUPERSET_PORT}
