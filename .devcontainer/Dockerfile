@@ -7,9 +7,8 @@ ARG BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 ARG DOCKER_ORG=${DOCKER_ORG:-apache}
 
 FROM --platform=${BUILDPLATFORM} ${DOCKER_ORG}/superset:${SUPERSET_VER}
-
+ENV NODE_VERSION=16
 ARG USERNAME
-
 USER root
 
 RUN useradd --uid 501 --gid 20 -m --no-log-init --shell /bin/bash $USERNAME \
@@ -46,7 +45,7 @@ RUN apt-get update -q \
   jq \
   wget
 
-USER $USERNAME
+
 # Extension packages
 RUN pip install authlib \
   netaddr \
@@ -62,5 +61,15 @@ RUN pip install pyodbc \
   sqlalchemy-drill \
   redis \
   sqlalchemy-vertica-python
+
+USER $USERNAME
+
+# Install nvm/node
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+# ENV NVM_DIR=/root/.nvm
+ENV NVM_DIR=/home/$USERNAME/.nvm
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && \
+  nvm use v${NODE_VERSION}
 
 EXPOSE ${SUPERSET_PORT}

@@ -134,7 +134,7 @@ FEATURE_FLAGS = {
     "TAGGING_SYSTEM": True,
     "DASHBOARD_VIRTUALIZATION": True,
     "HORIZONTAL_FILTER_BAR": True,
-    "ALERT_REPORTS": False,  # Disabling in production
+    "ALERT_REPORTS": True,  # Disabling in production
     "THUMBNAILS": True,
     "THUMBNAILS_SQLA_LISTENERS": True,
     "LISTVIEWS_DEFAULT_CARD_VIEW": True,

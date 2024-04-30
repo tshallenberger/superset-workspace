@@ -18,5 +18,73 @@
         "close": true // comment out this line to keep terminals open for troubleshooting
       }
     },
+    {
+      "label": "pip install",
+      "type": "shell",
+      "command": "pip --disable-pip-version-check install -e /workspace/superset",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "group": "build",
+        "reveal": "always",
+        "panel": "new",
+        "echo": false,
+        "close": true // comment out this line to keep terminals open for troubleshooting
+      },
+    },
+    {
+      "label": "npm ci && npm run build",
+      "type": "shell",
+      "command": "cd /workspace/superset/superset-frontend && npm ci && npm run build",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "group": "build",
+        "reveal": "always",
+        "panel": "new",
+        "echo": false,
+        "close": true // comment out this line to keep terminals open for troubleshooting
+      },
+    },
+    {
+      "label": "npm run build",
+      "type": "shell",
+      "command": "cd /workspace/superset/superset-frontend && npm run build",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "group": "build",
+        "reveal": "always",
+        "panel": "new",
+        "echo": false,
+        "close": true // comment out this line to keep terminals open for troubleshooting
+      },
+    },
+    {
+      "label": "superset db upgrade && init",
+      "type": "shell",
+      "command": "superset db upgrade && superset init",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "group": "build",
+        "reveal": "always",
+        "panel": "new",
+        "echo": false,
+        "close": true // comment out this line to keep terminals open for troubleshooting
+      },
+    },
   ]
 }
