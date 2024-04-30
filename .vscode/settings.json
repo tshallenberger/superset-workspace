@@ -8,23 +8,8 @@
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "python.createEnvironment.trigger": "off",
-  "vsicons.associations.files": [
-    {
-      "icon": "log",
-      "extensions": [
-        "logs",
-      ],
-      "format": "svg",
-    },
-  ],
+  "vsicons.associations.files": [],
   "vsicons.associations.folders": [
-    {
-      "icon": "middleware",
-      "extensions": [
-        "ansible",
-      ],
-      "format": "svg",
-    },
     {
       "icon": "config",
       "extensions": [
@@ -36,13 +21,6 @@
       "icon": "asset",
       "extensions": [
         "files",
-      ],
-      "format": "svg",
-    },
-    {
-      "icon": "kubernetes",
-      "extensions": [
-        "playbooks",
       ],
       "format": "svg",
     },

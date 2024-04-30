@@ -3,12 +3,16 @@
 
 ARG SUPERSET_VER=4.0.0-dev
 ARG SUPERSET_PORT=${SUPERSET_PORT:-8088}
+
 ARG BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 ARG DOCKER_ORG=${DOCKER_ORG:-apache}
 
 FROM --platform=${BUILDPLATFORM} ${DOCKER_ORG}/superset:${SUPERSET_VER}
+
 ENV NODE_VERSION=16
+
 ARG USERNAME
+
 USER root
 
 RUN useradd --uid 501 --gid 20 -m --no-log-init --shell /bin/bash $USERNAME \
