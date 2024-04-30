@@ -56,7 +56,7 @@ Display all networked containers (app, db, redis)
 
 ```bash
 
-docker inspect superset_workspace_app-nw \
+docker inspect superset_network \
 | jq '.[0].Containers[] 
 | {Name, IPv4Address} 
 | .["name"] = .Name
