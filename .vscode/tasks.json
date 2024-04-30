@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev init",
+      "type": "shell",
+      "command": "if ! test -f .devcontainer/superset.env; then cp .devcontainer/sample_superset.env .devcontainer/superset.env; fi",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "never",
+        "close": true // comment out this line to keep terminals open for troubleshooting
+      }
+    },
+  ]
+}

@@ -1,62 +1,66 @@
+# Apache Superset DevContainer
+
+
+ARG SUPERSET_VER=4.0.0-dev
+ARG SUPERSET_PORT=${SUPERSET_PORT:-8088}
 ARG BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
-ARG SUPERSET_VER=3.0.2
+ARG DOCKER_ORG=${DOCKER_ORG:-apache}
 
-FROM --platform=linux/amd64 apache/superset:${SUPERSET_VER}-dev
+FROM --platform=${BUILDPLATFORM} ${DOCKER_ORG}/superset:${SUPERSET_VER}
+
+ARG USERNAME
 
 USER root
 
-ENV NODE_VERSION=16 
+RUN useradd --uid 501 --gid 20 -m --no-log-init --shell /bin/bash $USERNAME \
+  && apt-get update \
+  && apt-get install -y sudo \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+  && chmod 0440 /etc/sudoers.d/$USERNAME
 
+# Troubleshooting tools
 RUN apt update && \
-    apt install -y \
-    default-mysql-client \
-    gdb \
-    net-tools
+  apt install -y \
+  default-mysql-client \
+  net-tools \
+  less
 
+# Container tools
 RUN apt-get update -q \
-    && apt-get install -yq \
-    iputils-ping \
-    gdb \
-    curl \
-    git \
-    ssh \
-    vim \
-    zsh \
-    nmap \
-    jq 
+  && apt-get install -yq --no-install-recommends \
+  make \
+  g++ \
+  unixodbc \
+  unixodbc-dev \
+  build-essential \
+  libsasl2-dev \
+  libsasl2-modules-gssapi-mit \
+  libpq-dev \
+  libecpg-dev \
+  libldap2-dev \
+  git \
+  ssh \
+  netcat-traditional \
+  curl \
+  iputils-ping \
+  jq \
+  wget
 
-# Install Docker CE CLI
-RUN apt-get update \
-    && apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release \
-    && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | apt-key add - 2>/dev/null \
-    && echo "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list \
-    && apt-get update \
-    && apt-get install -y docker-ce-cli
+USER $USERNAME
+# Extension packages
+RUN pip install authlib \
+  netaddr \
+  gevent \
+  statsd \
+  aiohttp \
+  jpype1 
 
-RUN pip install --upgrade pip
-# Install python formatter
-RUN pip install black
-# RUN pip install authlib \
-#     netaddr \
-#     gevent \
-#     statsd \
-#     aiohttp \
-#     jpype1 \
-#     black
-
-RUN pip install mysql-connector-python
-#     pyhive \
-#     sqlalchemy-drill \
-#     pyodbc \
-#     redis
-
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && \
-    nvm use v${NODE_VERSION} && \
-    npm i -g yarn pnpm
-
-USER root
+RUN pip install pyodbc \
+  mysqlclient \
+  mysql-connector-python \
+  pyhive \
+  sqlalchemy-drill \
+  redis \
+  sqlalchemy-vertica-python
 
 EXPOSE ${SUPERSET_PORT}

@@ -1,60 +1,132 @@
-# docker-compose.dev.yml
-# Used to spin up multiple (networked) containers in the project workspace
+# Apache Superset Dev Container -- Docker Compose
 
-# Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
-# (Adding the "ports" property to this file will not forward from a Codespace.)
+# WARNING -- Verify .devcontainer/superset.env exists before building
+# INFO    -- Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+#            (Adding the "ports" property to this file will not forward from a Codespace.)
+# INFO    -- Volume env variables (like EXPORTSPATH, ATHENZPATH) are loaded from .devcontainer/.env
 
 version: "3.8"
 
 services:
-  # primary container (specified in devcontainer.json)
   app:
     container_name: app
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-    env_file: .env
+      args:
+        USERNAME: $USER
+        USER_UID: 501
+        USER_GID: 20
+    env_file: superset.env
     init: true
     volumes:
-      # mounts project root under /workspace
       - ..:/workspace:cached
-      # mounts devcontainer/.vscode under root of workspace (these launch tasks are only usable within devcontainer)
-      - .vscode:/workspace/.vscode:cached
+      # - $TLSPATH:/app/tls:cached # only mount when testing SSL
       # Mount docker.sock in order to run docker from this docker dev container
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - $HOME/.ssh/known_hosts:/root/.ssh/known_hosts
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
-    # Use a shared network to connect with other containers
     networks:
-      - app-nw
+      - network
     depends_on:
       - db
       - redis
+    mem_limit: 8gb
+    shm_size: 2gb
+
   db:
-    image: mysql:8.0
+    image: mysql:8
     container_name: db
     restart: unless-stopped
-    # Use workspace directory to hold db data
     volumes:
-      - .mysql:/var/lib/mysql
-    env_file: .env
+      - $MYSQL_DATA:/var/lib/mysql
+      - $MYSQL_INI:/docker-entrypoint-initdb.d/
+    env_file: superset.env
     networks:
-      - app-nw
+      - network
     ports:
-      - 127.0.0.1:3306:3306
+      - 127.0.0.1:3307:3306
+
   redis:
     image: redis:7
     container_name: redis
     restart: unless-stopped
-    env_file: .env
-    # Use workspace directory to hold redis data
-    volumes:
-      - .redis:/var/lib/redis
+    env_file: superset.env
     networks:
-      - app-nw
+      - network
     ports:
       - 127.0.0.1:6379:6379
 
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   container_name: redis_commander
+  #   environment:
+  #     - REDIS_HOSTS=localhost:redis:6379
+  #     - HTTP_USER=admin
+  #     - HTTP_PASSWORD=admin
+  #   networks:
+  #     - network
+  #   ports:
+  #     - 127.0.0.1:8081:8081
+  #   depends_on:
+  #     - redis
+
+  superset-worker:
+    image: apache/superset:4.0.0-dev
+    container_name: worker
+    command:
+      [
+        "celery",
+        "--app=superset.tasks.celery_app:app",
+        "worker",
+        "--pool=prefork",
+        "-O",
+        "fair",
+        "-c",
+        "4"
+      ]
+    env_file: superset.env
+    restart: unless-stopped
+    networks:
+      - network
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ../extensions:/app/pythonpath:cached
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME"
+        ]
+    # Bump memory limit if processing selenium / thumbnails on superset-worker
+    # mem_limit: 12gb
+    # shm_size: 4gb
+    # mem_reservation: 512m
+
+  superset-beat:
+    image: apache/superset:4.0.0-dev
+    container_name: beat
+    command:
+      [
+        "celery",
+        "--app=superset.tasks.celery_app:app",
+        "beat"
+      ]
+    env_file: superset.env
+    restart: unless-stopped
+    networks:
+      - network
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ../extensions:/app/pythonpath:cached
+    healthcheck:
+      disable: true
+
 networks:
-  app-nw:
+  network:
     driver: bridge

@@ -64,9 +64,9 @@ ENVIRONMENT_TAG_CONFIG = {
             "color": "error.base",
             "text": "flask-debug",
         },
-        "dev": {
+        "devcontainer": {
             "color": "error.base",
-            "text": "Development",
+            "text": "DevContainer",
         },
         "staging": {
             "color": "warning.base",
