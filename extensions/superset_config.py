@@ -36,17 +36,7 @@ def isProd():
     return SUPERSET_ENV == "prod"
 
 
-PATH_TO_CERT = env("PATH_TO_CERT")
-PATH_TO_KEY = env("PATH_TO_KEY")
-PATH_TO_CA = env("PATH_TO_CA")
 
-cert_exists = os.path.exists(PATH_TO_CERT)
-key_exists = os.path.exists(PATH_TO_KEY)
-ca_exists = os.path.exists(PATH_TO_CA)
-
-print(f"[DEBUG] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
-print(f"[DEBUG] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
-print(f"[DEBUG] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
 
 
 def authDriver(driver: WebDriver, user) -> WebDriver:
@@ -62,6 +52,18 @@ def authDriver(driver: WebDriver, user) -> WebDriver:
 
 
 def buildSqlAlchemyUri():
+    PATH_TO_CERT = env("PATH_TO_CERT")
+    PATH_TO_KEY = env("PATH_TO_KEY")
+    PATH_TO_CA = env("PATH_TO_CA")
+
+    cert_exists = os.path.exists(PATH_TO_CERT)
+    key_exists = os.path.exists(PATH_TO_KEY)
+    ca_exists = os.path.exists(PATH_TO_CA)
+
+    print(f"[DEBUG] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
+    print(f"[DEBUG] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
+    print(f"[DEBUG] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
+    
     DATABASE_DIALECT = env("DATABASE_DIALECT")
     DATABASE_USER = env("DATABASE_USER")
     DATABASE_PASSWORD = env("DATABASE_PASSWORD")
@@ -184,12 +186,6 @@ print("[DEBUG] AUTH_USER_REGISTRATION_ROLE: " + str(AUTH_USER_REGISTRATION_ROLE)
 CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
 ######################### Metastore (MySQL) #########################
-DATABASE_DIALECT = env("DATABASE_DIALECT")
-DATABASE_USER = env("DATABASE_USER")
-DATABASE_PASSWORD = env("DATABASE_PASSWORD")
-DATABASE_HOST = env("DATABASE_HOST")
-DATABASE_PORT = env("DATABASE_PORT")
-DATABASE_NAME = env("DATABASE_NAME")
 
 # The SQLAlchemy connection string.
 SQLALCHEMY_DATABASE_URI = buildSqlAlchemyUri()

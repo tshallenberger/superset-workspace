@@ -20,9 +20,9 @@ Once the container is built, follow these steps to pull/build Superset:
 # pull submodule
 git submodule update --init
 # PIP install superset
-cd superset && pip install -e .
+cd /workspace/superset && pip install -e .
 # NPM install
-cd superset-frontend && npm ci && npm run build
+cd /workspace/superset/superset-frontend && npm ci && npm run build
 
 # Drop/Rebuild Superset Database
 mysql -h db \

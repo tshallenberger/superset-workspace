@@ -37,7 +37,7 @@ services:
 
   db:
     image: mysql:8
-    container_name: db
+    container_name: superset-db
     restart: unless-stopped
     volumes:
       - $MYSQL_DATA:/var/lib/mysql
@@ -50,7 +50,7 @@ services:
 
   redis:
     image: redis:7
-    container_name: redis
+    container_name: superset-redis
     restart: unless-stopped
     env_file: superset.env
     networks:
@@ -74,7 +74,7 @@ services:
 
   superset-worker:
     image: apache/superset:4.0.0-dev
-    container_name: worker
+    container_name: superset-worker
     command:
       [
         "celery",
@@ -108,7 +108,7 @@ services:
 
   superset-beat:
     image: apache/superset:4.0.0-dev
-    container_name: beat
+    container_name: superset-beat
     command:
       [
         "celery",
