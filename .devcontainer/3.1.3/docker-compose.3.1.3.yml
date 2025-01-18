@@ -1,0 +1,21 @@
+# Apache Superset Dev Container -- Docker Compose
+
+# WARNING -- Verify .devcontainer/superset.env exists before building
+# INFO    -- Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+#            (Adding the "ports" property to this file will not forward from a Codespace.)
+# INFO    -- Volume env variables (like EXPORTSPATH, CERTSPATH) are loaded from .devcontainer/.env
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      dockerfile: .devcontainer/3.1.3/Dockerfile
+      args:
+        SUPERSET_VERSION: 3.1.3-dev
+
+  superset-worker:
+    image: docker.io/apache/superset:3.1.3
+
+  superset-worker-beat:
+    image: docker.io/apache/superset:3.1.3

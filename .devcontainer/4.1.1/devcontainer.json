@@ -1,17 +1,24 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.217.4/containers/python-3
 {
-  "name": "Apache Superset",
-  "dockerComposeFile": "docker-compose.yml",
+  "name": "Apache Superset v4.1.1",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.4.1.1.yml"
+  ],
   "service": "app",
   "workspaceFolder": "/workspace",
   "containerEnv": {
-    "PYTHONPATH": "$PYTHONPATH:/workspace/extensions",
-    "SUPERSET_PATH": "${containerWorkspaceFolder}/superset",
-    "USERNAME": "${localEnv:USER}"
-  },
+    "PYTHONPATH": "$PYTHONPATH:/workspace/config:/workspace/superset",
+    "SUPERSETPATH": "/workspace/superset",
+    "ANSIBLEPATH": "/workspace/ansible",
+    "VOLUMES": "/workspace/.devcontainer/volumes",
+    "EXPORTS": "/app/exports",
+    "SUPERSET_VERSION": "4.1.1",
+    "ARTIFACT_VERSION": "4.1.1"
+  }, 
   "remoteEnv": {
-    "USERNAME": "${localEnv:USER}"
+    "USER": "${localEnv:USER}" // not needed if Dockerfile specifies the USER
   },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [
@@ -26,8 +33,8 @@
   "postCreateCommand": "",
   "postAttachCommand": "git config --global --add safe.directory /workspace",
   // More info: https://aka.ms/vscode-remote/containers/non-root.
-  "remoteUser": "${localEnv:USER}",
-  "containerUser": "${localEnv:USER}",
+  // "remoteUser": "${localEnv:USER}",
+  // "containerUser": "${localEnv:USER}",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -45,6 +52,7 @@
         "samuelcolvin.jinjahtml"
       ],
       "settings": {
+        // required to enable certain vscode extensions
         "extensions.verifySignature": false,
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.formatting.provider": "black",
