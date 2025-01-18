@@ -20,9 +20,9 @@ services:
     init: true
     volumes:
       - ..:/workspace
-      - $EXPORTSPATH:/app/exports:cached
-      - $CERTSPATH:/app/certs:cached
-      - $TLSPATH:/app/tls:cached # only mount when testing SSL
+      - $EXPORTS:/app/exports:cached
+      - $CERTS:/app/certs:cached
+      - $TLS:/app/tls:cached # only mount when testing SSL
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
     networks:
@@ -65,8 +65,7 @@ services:
       - db
       - redis
     volumes:
-      - $CERTSPATH:/app/certs:cached
-      - $YAHOOPATH:/app/yahoo:ro # set yahoo certs to readonly
+      - $CERTS:/app/certs:cached
       - ../config:/app/pythonpath:cached
       - ./volumes/logs:/app/logs:rw
     healthcheck:
@@ -87,7 +86,7 @@ services:
       - db
       - redis
     volumes:
-      - $CERTSPATH:/app/certs:cached
+      - $CERTS:/app/certs:cached
       - ../config:/app/pythonpath:cached
     healthcheck:
       disable: true

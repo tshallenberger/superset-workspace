@@ -10,15 +10,10 @@
   "workspaceFolder": "/workspace",
   "containerEnv": {
     "PYTHONPATH": "$PYTHONPATH:/workspace/config:/workspace/superset",
-    "SUPERSETPATH": "/workspace/superset",
-    "ANSIBLEPATH": "/workspace/ansible",
-    "VOLUMES": "/workspace/.devcontainer/volumes",
-    "EXPORTS": "/app/exports",
-    "SUPERSET_VERSION": "4.1.1",
-    "ARTIFACT_VERSION": "4.1.1"
-  }, 
+    "SUPERSETPATH": "/workspace/superset"
+  },
   "remoteEnv": {
-    "USER": "${localEnv:USER}" // not needed if Dockerfile specifies the USER
+    // "USER": "${localEnv:USER}" // not needed if Dockerfile specifies the USER
   },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [

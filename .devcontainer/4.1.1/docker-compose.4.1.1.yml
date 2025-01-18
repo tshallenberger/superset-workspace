@@ -14,6 +14,12 @@ services:
       args:
         SUPERSET_VERSION: 4.1.1
 
+  # db:
+  #   container_name: db
+
+  # redis:
+  #   container_name: redis
+
   superset-worker:
     image: docker.io/apache/superset:4.1.1
 
