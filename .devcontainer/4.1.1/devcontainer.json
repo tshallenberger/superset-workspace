@@ -10,7 +10,8 @@
   "workspaceFolder": "/workspace",
   "containerEnv": {
     "PYTHONPATH": "$PYTHONPATH:/workspace/config:/workspace/superset",
-    "SUPERSETPATH": "/workspace/superset"
+    "SUPERSETPATH": "/workspace/superset",
+    "SUPERSET_VERSION": "4.1.1"
   },
   "remoteEnv": {
     // "USER": "${localEnv:USER}" // not needed if Dockerfile specifies the USER
