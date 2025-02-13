@@ -21,8 +21,8 @@ services:
     volumes:
       - ..:/workspace
       - $EXPORTS:/app/exports:cached
-      - $CERTS:/app/certs:cached
-      - $TLS:/app/tls:cached # only mount when testing SSL
+      # - $CERTS:/app/certs:cached
+      # - $TLS:/app/tls:cached # only mount when testing SSL
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
     networks:
@@ -54,42 +54,42 @@ services:
     ports:
       - 127.0.0.1:6379:6379
 
-  superset-worker:
-    container_name: worker
-    command: [ "celery", "--app=superset.tasks.celery_app:app", "worker", "--pool=prefork", "-O", "fair", "-c", "4" ]
-    env_file: superset.env
-    restart: unless-stopped
-    networks:
-      - network
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - $CERTS:/app/certs:cached
-      - ../config:/app/pythonpath:cached
-      - ./volumes/logs:/app/logs:rw
-    healthcheck:
-      test: [ "CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME" ]
-    # Bump memory limit if processing selenium / thumbnails on superset-worker
-    mem_limit: 14gb
-    shm_size: 4gb
-    mem_reservation: 512m
+  # superset-worker:
+  #   container_name: worker
+  #   command: [ "celery", "--app=superset.tasks.celery_app:app", "worker", "--pool=prefork", "-O", "fair", "-c", "4" ]
+  #   env_file: superset.env
+  #   restart: unless-stopped
+  #   networks:
+  #     - network
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   volumes:
+  #     - $CERTS:/app/certs:cached
+  #     - ../config:/app/pythonpath:cached
+  #     - ./volumes/logs:/app/logs:rw
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME" ]
+  #   # Bump memory limit if processing selenium / thumbnails on superset-worker
+  #   mem_limit: 14gb
+  #   shm_size: 4gb
+  #   mem_reservation: 512m
 
-  superset-worker-beat:
-    container_name: beat
-    command: [ "celery", "--app=superset.tasks.celery_app:app", "beat", "-s", "/tmp/celerybeat-schedule" ]
-    env_file: superset.env
-    restart: unless-stopped
-    networks:
-      - network
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - $CERTS:/app/certs:cached
-      - ../config:/app/pythonpath:cached
-    healthcheck:
-      disable: true
+  # superset-worker-beat:
+  #   container_name: beat
+  #   command: [ "celery", "--app=superset.tasks.celery_app:app", "beat", "-s", "/tmp/celerybeat-schedule" ]
+  #   env_file: superset.env
+  #   restart: unless-stopped
+  #   networks:
+  #     - network
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   volumes:
+  #     - $CERTS:/app/certs:cached
+  #     - ../config:/app/pythonpath:cached
+  #   healthcheck:
+  #     disable: true
 
 networks:
   network:

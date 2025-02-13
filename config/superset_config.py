@@ -1,6 +1,6 @@
 import logging
 from datetime import timedelta
-from flask_appbuilder.security.manager import AUTH_OAUTH
+from flask_appbuilder.security.manager import AUTH_OAUTH, AUTH_DB
 from superset.superset_typing import CacheConfig
 from celery.schedules import crontab
 from flask_caching.backends.rediscache import RedisCache
@@ -19,13 +19,13 @@ from superset_utils import (
     loadOktaClientSecret,
 )
 
-print("[TSHAL] Initializing...")
+print("[CONFIG] Initializing...")
 
 SUPERSET_ENV = env("SUPERSET_ENV")
 SUPERSET_VERSION = env("SUPERSET_VERSION")
 
-print(f"[TSHAL] SUPERSET_ENV: {SUPERSET_ENV}")
-print(f"[TSHAL] SUPERSET_VERSION: {SUPERSET_VERSION}")
+print(f"[CONFIG] SUPERSET_ENV: {SUPERSET_ENV}")
+print(f"[CONFIG] SUPERSET_VERSION: {SUPERSET_VERSION}")
 
 ENVIRONMENT_TAG_CONFIG = {
     "variable": "SUPERSET_ENV",
@@ -98,30 +98,30 @@ FEATURE_FLAGS = {
 ADDITIONAL_MIDDLEWARE = [DebugMiddleware]
 
 ######################### Authentication/Authorization #########################
-AUTH_TYPE = AUTH_OAUTH
-
-OKTA_CLIENT_ID = loadOktaClientId()
-OKTA_CLIENT_SECRET = loadOktaClientSecret()
-OKTA_CLIENT_REDIRECT_URI = env("OKTA_CLIENT_REDIRECT_URI")
-print(f"[TSHAL] {str(OKTA_CLIENT_REDIRECT_URI)}")
+# AUTH_TYPE = AUTH_OAUTH
+AUTH_TYPE = AUTH_DB
+# OKTA_CLIENT_ID = loadOktaClientId()
+# OKTA_CLIENT_SECRET = loadOktaClientSecret()
+# OKTA_CLIENT_REDIRECT_URI = env("OKTA_CLIENT_REDIRECT_URI")
+# print(f"[CONFIG] {str(OKTA_CLIENT_REDIRECT_URI)}")
 # https://<superset-webserver>/oauth-authorized/<provider-name>
 # http://localhost:8088/oauth-authorized/okta
-OAUTH_PROVIDERS = [
-    {
-        "name": "okta",
-        "token_key": "access_token",
-        "icon": "fa-address-card",
-        "remote_app": {
-            "client_id": OKTA_CLIENT_ID,
-            "client_secret": OKTA_CLIENT_SECRET,
-            "redirect_uri": OKTA_CLIENT_REDIRECT_URI,
-            "client_kwargs": {"scope": "openid profile email groups"},
-            "access_token_method": "POST",  # HTTP Method to call access_token_url
-            "access_token_params": {},  # Additional parameters for calls to access_token_url},
-            "server_metadata_url": "<REPLACED>/.well-known/openid-configuration",
-        },
-    }
-]
+# OAUTH_PROVIDERS = [
+#     {
+#         "name": "okta",
+#         "token_key": "access_token",
+#         "icon": "fa-address-card",
+#         "remote_app": {
+#             "client_id": OKTA_CLIENT_ID,
+#             "client_secret": OKTA_CLIENT_SECRET,
+#             "redirect_uri": OKTA_CLIENT_REDIRECT_URI,
+#             "client_kwargs": {"scope": "openid profile email groups"},
+#             "access_token_method": "POST",  # HTTP Method to call access_token_url
+#             "access_token_params": {},  # Additional parameters for calls to access_token_url},
+#             "server_metadata_url": "<REPLACED>/.well-known/openid-configuration",
+#         },
+#     }
+# ]
 
 # Will allow user self registration, allowing to create Flask users from Authorized User
 AUTH_USER_REGISTRATION = True
@@ -131,10 +131,10 @@ AUTH_USER_REGISTRATION_ROLE = "Admin"
 if isProd():
     AUTH_USER_REGISTRATION_ROLE = "General"
 
-print("[TSHAL] AUTH_USER_REGISTRATION_ROLE: " + str(AUTH_USER_REGISTRATION_ROLE))
+print("[CONFIG] AUTH_USER_REGISTRATION_ROLE: " + str(AUTH_USER_REGISTRATION_ROLE))
 
 # Initialize custom SSO security manager to use Okta
-CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
+# CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
 ######################### Metastore (MySQL) #########################
 
@@ -154,7 +154,7 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     # "pool_reset_on_return": None,
 }
 
-print(f"[TSHAL] SQLALCHEMY_ENGINE_OPTIONS: {SQLALCHEMY_ENGINE_OPTIONS}")
+print(f"[CONFIG] SQLALCHEMY_ENGINE_OPTIONS: {SQLALCHEMY_ENGINE_OPTIONS}")
 # Deny all data URLs
 DATASET_IMPORT_ALLOWED_DATA_URLS = []
 
@@ -177,7 +177,7 @@ def convertListToTuple(list):
 
 # Druid connection bugfix
 def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
-    print(f"[TSHAL] DB_CONNECTION_MUTATOR: {uri} {params} {username} {source}")
+    print(f"[CONFIG] DB_CONNECTION_MUTATOR: {uri} {params} {username} {source}")
     if isDruidUri(uri):
         if containsConnectArgs(params):
             connect_args = params["connect_args"]
@@ -190,20 +190,20 @@ def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
 def SQL_QUERY_MUTATOR(  # pylint: disable=invalid-name,unused-argument
     sql, **kwargs: Any
 ) -> str:
-    print(f"[TSHAL] kwargs: {kwargs}")
+    print(f"[CONFIG] kwargs: {kwargs}")
     return f"{sql}"
 
 
 # @event.listens_for(Session, "after_attach")
 # def set_wait_timeout(session, transaction, connection):
-#     print("[TSHAL] after_attach: SET wait_timeout=300;")
+#     print("[CONFIG] after_attach: SET wait_timeout=300;")
 #     session.execute("SET wait_timeout=300;")
 
 
 ######################### Caching (Redis) #########################
 
 REDIS_ENABLED = env("REDIS_ENABLED")
-print("[TSHAL] REDIS_ENABLED: " + str(REDIS_ENABLED))
+print("[CONFIG] REDIS_ENABLED: " + str(REDIS_ENABLED))
 
 
 def redisEnabled():
@@ -220,7 +220,7 @@ if redisEnabled():
     )
 
     REDIS_DATABASE_URI = f"redis://{REDIS_HOST}:{REDIS_PORT}"
-    print("[TSHAL] REDIS_DATABASE_URI: " + str(REDIS_DATABASE_URI))
+    print("[CONFIG] REDIS_DATABASE_URI: " + str(REDIS_DATABASE_URI))
 
     CACHE_CONFIG = {
         "CACHE_TYPE": "RedisCache",
@@ -281,15 +281,15 @@ CELERY_CONFIG = CeleryConfig
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = False
 
 THUMBNAIL_SELENIUM_USER = "admin"
-ALERT_REPORTS_EXECUTE_AS = [ExecutorType.SELENIUM]
+# ALERT_REPORTS_EXECUTE_AS = [ExecutorType.SELENIUM]
 
 WEBDRIVER_AUTH_FUNC = authDriver
 BROWSER_CONTEXT_AUTH_FUNC = None
 WEBDRIVER_BASEURL = env("WEBDRIVER_BASEURL")
 WEBDRIVER_BASEURL_USER_FRIENDLY = env("WEBDRIVER_BASEURL_USER_FRIENDLY")
 
-print(f"[TSHAL] WEBDRIVER_BASEURL: {WEBDRIVER_BASEURL}")
-print(f"[TSHAL] WEBDRIVER_BASEURL_USER_FRIENDLY: {WEBDRIVER_BASEURL_USER_FRIENDLY}")
+print(f"[CONFIG] WEBDRIVER_BASEURL: {WEBDRIVER_BASEURL}")
+print(f"[CONFIG] WEBDRIVER_BASEURL_USER_FRIENDLY: {WEBDRIVER_BASEURL_USER_FRIENDLY}")
 
 WEBDRIVER_CONFIGURATION = {
     "service_log_path": "/app/logs/geckodriver.log",
@@ -322,8 +322,8 @@ SESSION_COOKIE_HTTPONLY = False  # Prevent cookie from being read by frontend JS
 SESSION_COOKIE_SECURE = True  # Prevent cookie from being transmitted over non-tls?
 SESSION_COOKIE_SAMESITE = "Lax"  # One of [None, 'None', 'Lax', 'Strict']
 
-SLACK_API_TOKEN = "slack_api_token"
-print(f"[TSHAL] SLACK_API_TOKEN: {SLACK_API_TOKEN[:5]}**********")
+# SLACK_API_TOKEN = "slack_api_token"
+# print(f"[CONFIG] SLACK_API_TOKEN: {SLACK_API_TOKEN[:5]}**********")
 
 
 ### Misc. ###
@@ -334,16 +334,16 @@ COMPRESS_REGISTER = True
 if not usingGunicorn():
     COMPRESS_REGISTER = False
 
-print(f"[TSHAL] COMPRESS_REGISTER: {COMPRESS_REGISTER}")
+print(f"[CONFIG] COMPRESS_REGISTER: {COMPRESS_REGISTER}")
 
 if isProd():
     SSL_KEY_FILE = env("SSL_KEY_FILE")
     SSL_CERT_FILE = env("SSL_CERT_FILE")
     SSL_CERT_PATH = env("SSL_CERT_PATH")
 
-    print("[TSHAL] SSL_KEY_FILE: " + str(SSL_KEY_FILE))
-    print("[TSHAL] SSL_CERT_FILE: " + str(SSL_CERT_FILE))
-    print("[TSHAL] SSL_CERT_PATH: " + str(SSL_CERT_PATH))
+    print("[CONFIG] SSL_KEY_FILE: " + str(SSL_KEY_FILE))
+    print("[CONFIG] SSL_CERT_FILE: " + str(SSL_CERT_FILE))
+    print("[CONFIG] SSL_CERT_PATH: " + str(SSL_CERT_PATH))
 
 SQLLAB_CTAS_NO_LIMIT = True
 SQLLAB_TIMEOUT = 300
@@ -351,7 +351,7 @@ SQLLAB_TIMEOUT = 300
 SUPERSET_WEBSERVER_TIMEOUT = int(timedelta(minutes=5).total_seconds())
 
 SUPERSET_SECRET_KEY = env("SUPERSET_SECRET_KEY")
-print(f"[TSHAL] SUPERSET_SECRET_KEY: {SUPERSET_SECRET_KEY[:4]}**********")
+print(f"[CONFIG] SUPERSET_SECRET_KEY: {SUPERSET_SECRET_KEY[:4]}**********")
 
 # Uncomment to setup Your App name
 APP_NAME = "Superset"

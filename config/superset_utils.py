@@ -39,7 +39,7 @@ def env(var_name: str, default: Optional[str] = None) -> str:
 
 
 SUPERSET_ENV = env("SUPERSET_ENV")
-print("[TSHAL] SUPERSET_ENV: " + SUPERSET_ENV)
+print("[CONFIG] SUPERSET_ENV: " + SUPERSET_ENV)
 
 
 def isDev():
@@ -66,20 +66,21 @@ cert_exists = exists(PATH_TO_CERT)
 key_exists = exists(PATH_TO_KEY)
 ca_exists = exists(PATH_TO_CA)
 
-print(f"[TSHAL] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
-print(f"[TSHAL] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
-print(f"[TSHAL] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
+print(f"[CONFIG] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
+print(f"[CONFIG] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
+print(f"[CONFIG] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
+
 
 # authdriver used for headless auth (alerts/reports, thumbnails, etc)
 def authDriver(driver: WebDriver, user) -> WebDriver:
-    print(f"[TSHAL] ##### auth_driver BEGIN {driver} #####")
+    print(f"[CONFIG] ##### auth_driver BEGIN {driver} #####")
     driver.get(headless_url("/doesnotexist"))
     try:
         cookies = MachineAuthProvider.get_auth_cookies(user)
         for cookie_name, cookie_val in cookies.items():
             driver.add_cookie(dict(name=cookie_name, value=cookie_val))
     except Exception as e:
-        print(f"[TSHAL] Error: {e}")
+        print(f"[CONFIG] Error: {e}")
     return driver
 
 
@@ -108,8 +109,9 @@ def buildSqlAlchemyUri():
             PATH_TO_KEY,
             PATH_TO_CA,
         )
-    print("[TSHAL] SQLALCHEMY_DATABASE_URI: " + str(SQLALCHEMY_DATABASE_URI))
+    print("[CONFIG] SQLALCHEMY_DATABASE_URI: " + str(SQLALCHEMY_DATABASE_URI))
     return SQLALCHEMY_DATABASE_URI
+
 
 def loadOktaClientId():
     return "okta.client_id"
