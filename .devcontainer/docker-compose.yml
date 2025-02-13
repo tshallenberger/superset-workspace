@@ -3,7 +3,7 @@
 # WARNING -- Verify .devcontainer/superset.env exists before building
 # INFO    -- Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
 #            (Adding the "ports" property to this file will not forward from a Codespace.)
-# INFO    -- Volume env variables (like EXPORTSPATH, ATHENZPATH) are loaded from .devcontainer/.env
+# INFO    -- Volume env variables (like EXPORTSPATH, CERTSPATH) are loaded from .devcontainer/.env
 
 version: "3.8"
 
@@ -12,35 +12,31 @@ services:
     container_name: app
     build:
       context: ..
-      dockerfile: .devcontainer/Dockerfile
       args:
-        USERNAME: $USER
-        USER_UID: 501
-        USER_GID: 20
+        USER_NAME: ${USER}
+        USER_UID: ${UID}
+        USER_GID: ${GID}
     env_file: superset.env
     init: true
     volumes:
-      - ..:/workspace:cached
-      # - $TLSPATH:/app/tls:cached # only mount when testing SSL
-      # Mount docker.sock in order to run docker from this docker dev container
-      - /var/run/docker.sock:/var/run/docker.sock:rw
-      - $HOME/.ssh/known_hosts:/root/.ssh/known_hosts
+      - ..:/workspace
+      - $EXPORTS:/app/exports:cached
+      # - $CERTS:/app/certs:cached
+      # - $TLS:/app/tls:cached # only mount when testing SSL
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
     networks:
       - network
     depends_on:
       - db
-      - redis
-    mem_limit: 8gb
-    shm_size: 2gb
+    mem_limit: 16gb
+    shm_size: 4gb
 
   db:
     image: mysql:8
     container_name: superset-db
     restart: unless-stopped
     volumes:
-      - $MYSQL_DATA:/var/lib/mysql
       - $MYSQL_INI:/docker-entrypoint-initdb.d/
     env_file: superset.env
     networks:
@@ -58,74 +54,42 @@ services:
     ports:
       - 127.0.0.1:6379:6379
 
-  # redis-commander:
-  #   image: rediscommander/redis-commander:latest
-  #   container_name: redis_commander
-  #   environment:
-  #     - REDIS_HOSTS=localhost:redis:6379
-  #     - HTTP_USER=admin
-  #     - HTTP_PASSWORD=admin
+  # superset-worker:
+  #   container_name: worker
+  #   command: [ "celery", "--app=superset.tasks.celery_app:app", "worker", "--pool=prefork", "-O", "fair", "-c", "4" ]
+  #   env_file: superset.env
+  #   restart: unless-stopped
   #   networks:
   #     - network
-  #   ports:
-  #     - 127.0.0.1:8081:8081
   #   depends_on:
+  #     - db
   #     - redis
+  #   volumes:
+  #     - $CERTS:/app/certs:cached
+  #     - ../config:/app/pythonpath:cached
+  #     - ./volumes/logs:/app/logs:rw
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME" ]
+  #   # Bump memory limit if processing selenium / thumbnails on superset-worker
+  #   mem_limit: 14gb
+  #   shm_size: 4gb
+  #   mem_reservation: 512m
 
-  superset-worker:
-    image: apache/superset:4.0.0-dev
-    container_name: superset-worker
-    command:
-      [
-        "celery",
-        "--app=superset.tasks.celery_app:app",
-        "worker",
-        "--pool=prefork",
-        "-O",
-        "fair",
-        "-c",
-        "4"
-      ]
-    env_file: superset.env
-    restart: unless-stopped
-    networks:
-      - network
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - ../extensions:/app/pythonpath:cached
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME"
-        ]
-    # Bump memory limit if processing selenium / thumbnails on superset-worker
-    # mem_limit: 12gb
-    # shm_size: 4gb
-    # mem_reservation: 512m
-
-  superset-beat:
-    image: apache/superset:4.0.0-dev
-    container_name: superset-beat
-    command:
-      [
-        "celery",
-        "--app=superset.tasks.celery_app:app",
-        "beat"
-      ]
-    env_file: superset.env
-    restart: unless-stopped
-    networks:
-      - network
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - ../extensions:/app/pythonpath:cached
-    healthcheck:
-      disable: true
+  # superset-worker-beat:
+  #   container_name: beat
+  #   command: [ "celery", "--app=superset.tasks.celery_app:app", "beat", "-s", "/tmp/celerybeat-schedule" ]
+  #   env_file: superset.env
+  #   restart: unless-stopped
+  #   networks:
+  #     - network
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   volumes:
+  #     - $CERTS:/app/certs:cached
+  #     - ../config:/app/pythonpath:cached
+  #   healthcheck:
+  #     disable: true
 
 networks:
   network:

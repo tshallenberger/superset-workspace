@@ -1,25 +1,28 @@
-# Apache Superset DevContainer
-
-
-ARG SUPERSET_VER=4.0.0-dev
-ARG SUPERSET_PORT=${SUPERSET_PORT:-8088}
-
+# Apache Superset DevContainer v4.1.1
+ARG VERSION=4.1.1-dev
 ARG BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
+
+# official registry/org
+ARG DOCKER_REG=${DOCKER_REG:-docker.io}
 ARG DOCKER_ORG=${DOCKER_ORG:-apache}
 
-FROM --platform=${BUILDPLATFORM} ${DOCKER_ORG}/superset:${SUPERSET_VER}
+FROM --platform=${BUILDPLATFORM} ${DOCKER_REG}/${DOCKER_ORG}/superset:${VERSION}
 
-ENV NODE_VERSION=16
+ENV NODE_VERSION=18
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ARG SUPERSET_PORT=${SUPERSET_PORT:-8088}
 
-ARG USERNAME
+ARG USER_NAME
+ARG USER_UID
+ARG USER_GID
 
 USER root
 
-RUN useradd --uid 501 --gid 20 -m --no-log-init --shell /bin/bash $USERNAME \
+RUN useradd --uid $USER_UID --gid $USER_GID -m --no-log-init --shell /bin/bash $USER_NAME \
   && apt-get update \
   && apt-get install -y sudo \
-  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-  && chmod 0440 /etc/sudoers.d/$USERNAME
+  && echo $USER_NAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USER_NAME \
+  && chmod 0440 /etc/sudoers.d/$USER_NAME
 
 # Troubleshooting tools
 RUN apt update && \
@@ -49,7 +52,6 @@ RUN apt-get update -q \
   jq \
   wget
 
-
 # Extension packages
 RUN pip install authlib \
   netaddr \
@@ -64,14 +66,15 @@ RUN pip install pyodbc \
   pyhive \
   sqlalchemy-drill \
   redis \
-  sqlalchemy-vertica-python
+  sqlalchemy-vertica-python \
+  google
 
-USER $USERNAME
+USER ${USER_NAME}
 
-# Install nvm/node
+# Install nvm/node 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 # ENV NVM_DIR=/root/.nvm
-ENV NVM_DIR=/home/$USERNAME/.nvm
+ENV NVM_DIR=/home/$USER_NAME/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && \
   nvm use v${NODE_VERSION}

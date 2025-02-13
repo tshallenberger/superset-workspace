@@ -1,123 +1,66 @@
 import logging
-import os
 from datetime import timedelta
-from typing import Optional
-from flask_appbuilder.security.manager import AUTH_OAUTH
+from flask_appbuilder.security.manager import AUTH_OAUTH, AUTH_DB
 from superset.superset_typing import CacheConfig
 from celery.schedules import crontab
 from flask_caching.backends.rediscache import RedisCache
 from superset.tasks.types import ExecutorType
-from selenium.webdriver.remote.webdriver import WebDriver
-from superset.utils.machine_auth import MachineAuthProvider
+from typing import Any, Callable, Literal, TYPE_CHECKING, TypedDict
+
 from debug_middleware import DebugMiddleware
 from custom_sso_security_manager import CustomSsoSecurityManager
-from superset.utils.urls import headless_url
+from superset_utils import (
+    authDriver,
+    buildSqlAlchemyUri,
+    env,
+    usingGunicorn,
+    isProd,
+    loadOktaClientId,
+    loadOktaClientSecret,
+)
 
-
-def env(var_name: str, default: Optional[str] = None) -> str:
-    """Get the environment variable or raise exception."""
-    try:
-        return os.environ[var_name]
-    except KeyError:
-        if default is not None:
-            return default
-        else:
-            error_msg = "The environment variable {} was missing, abort...".format(
-                var_name
-            )
-            raise EnvironmentError(error_msg)
-
+print("[CONFIG] Initializing...")
 
 SUPERSET_ENV = env("SUPERSET_ENV")
-print("[DEBUG] SUPERSET_ENV: " + SUPERSET_ENV)
+SUPERSET_VERSION = env("SUPERSET_VERSION")
 
-
-def isProd():
-    return SUPERSET_ENV == "prod"
-
-
-
-
-
-def authDriver(driver: WebDriver, user) -> WebDriver:
-    print(f"[DEBUG] ##### auth_driver BEGIN {driver} #####")
-    driver.get(headless_url("/doesnotexist"))
-    try:
-        cookies = MachineAuthProvider.get_auth_cookies(user)
-        for cookie_name, cookie_val in cookies.items():
-            driver.add_cookie(dict(name=cookie_name, value=cookie_val))
-    except Exception as e:
-        print(f"[DEBUG] Error: {e}")
-    return driver
-
-
-def buildSqlAlchemyUri():
-    PATH_TO_CERT = env("PATH_TO_CERT")
-    PATH_TO_KEY = env("PATH_TO_KEY")
-    PATH_TO_CA = env("PATH_TO_CA")
-
-    cert_exists = os.path.exists(PATH_TO_CERT)
-    key_exists = os.path.exists(PATH_TO_KEY)
-    ca_exists = os.path.exists(PATH_TO_CA)
-
-    print(f"[DEBUG] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
-    print(f"[DEBUG] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
-    print(f"[DEBUG] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
-    
-    DATABASE_DIALECT = env("DATABASE_DIALECT")
-    DATABASE_USER = env("DATABASE_USER")
-    DATABASE_PASSWORD = env("DATABASE_PASSWORD")
-    DATABASE_HOST = env("DATABASE_HOST")
-    DATABASE_PORT = env("DATABASE_PORT")
-    DATABASE_NAME = env("DATABASE_NAME")
-
-    # The SQLAlchemy connection string.
-    SQLALCHEMY_DATABASE_URI = "%s://%s:%s@%s:%s/%s" % (
-        DATABASE_DIALECT,
-        DATABASE_USER,
-        DATABASE_PASSWORD,
-        DATABASE_HOST,
-        DATABASE_PORT,
-        DATABASE_NAME,
-    )
-    if isProd():
-        SQLALCHEMY_DATABASE_URI = "%s?ssl_cert=%s&ssl_key=%s&ssl_ca=%s" % (
-            SQLALCHEMY_DATABASE_URI,
-            PATH_TO_CERT,
-            PATH_TO_KEY,
-            PATH_TO_CA,
-        )
-    print("[DEBUG] SQLALCHEMY_DATABASE_URI: " + str(SQLALCHEMY_DATABASE_URI))
-    return SQLALCHEMY_DATABASE_URI
-
-
-print("[DEBUG] Initializing...")
-
-SUPERSET_ENV = env("SUPERSET_ENV")
-print("[DEBUG] SUPERSET_ENV: " + SUPERSET_ENV)
+print(f"[CONFIG] SUPERSET_ENV: {SUPERSET_ENV}")
+print(f"[CONFIG] SUPERSET_VERSION: {SUPERSET_VERSION}")
 
 ENVIRONMENT_TAG_CONFIG = {
     "variable": "SUPERSET_ENV",
     "values": {
         "": {
             "color": "error.base",
-            "text": "Local",
+            "text": "EnvNotFound",
         },
         "debug": {
             "color": "error.base",
-            "text": "Debug",
+            "text": f"Debug v{SUPERSET_VERSION}",
         },
         "dev": {
             "color": "error.base",
-            "text": "DevContainer",
+            "text": f"DevContainer v{SUPERSET_VERSION}",
+        },
+        "devcontainer": {
+            "color": "error.base",
+            "text": f"DevContainer v{SUPERSET_VERSION}",
         },
         "development": {
             "color": "error.base",
-            "text": "Development",
+            "text": f"DevContainer v{SUPERSET_VERSION}",
         },
         "staging": {
             "color": "warning.base",
-            "text": "Staging",
+            "text": f"Staging v{SUPERSET_VERSION}",
+        },
+        "staging1": {
+            "color": "warning.dark1",
+            "text": f"Staging 1: v{SUPERSET_VERSION}",
+        },
+        "staging2": {
+            "color": "warning.dark2",
+            "text": f"Staging 2: v{SUPERSET_VERSION}",
         },
         "production": {
             "color": "",
@@ -136,28 +79,33 @@ FEATURE_FLAGS = {
     "TAGGING_SYSTEM": True,
     "DASHBOARD_VIRTUALIZATION": True,
     "HORIZONTAL_FILTER_BAR": True,
-    "ALERT_REPORTS": True,  # Disabling in production
+    "ALERT_REPORTS": False,  # Disabling in production
     "THUMBNAILS": True,
     "THUMBNAILS_SQLA_LISTENERS": True,
     "LISTVIEWS_DEFAULT_CARD_VIEW": True,
+    # "PLAYWRIGHT_REPORTS_AND_THUMBNAILS": True,
+    "ENABLE_DASHBOARD_SCREENSHOT_ENDPOINTS": True,
+    # Generate screenshots (PDF or JPG) of dashboards using the web driver.
+    # When disabled, screenshots are generated on the fly by the browser.
+    # This feature flag is used by the download feature in the dashboard view.
+    # It is dependent on ENABLE_DASHBOARD_SCREENSHOT_ENDPOINT being enabled.
+    "ENABLE_DASHBOARD_DOWNLOAD_WEBDRIVER_SCREENSHOT": True,
+    "SHARE_QUERIES_VIA_KV_STORE": True,
 }
 
 ######################### Middleware #########################
 
 ADDITIONAL_MIDDLEWARE = [DebugMiddleware]
 
-######################### CKMS/Athenz #########################
-
-
 ######################### Authentication/Authorization #########################
 # AUTH_TYPE = AUTH_OAUTH
-
+AUTH_TYPE = AUTH_DB
 # OKTA_CLIENT_ID = loadOktaClientId()
 # OKTA_CLIENT_SECRET = loadOktaClientSecret()
 # OKTA_CLIENT_REDIRECT_URI = env("OKTA_CLIENT_REDIRECT_URI")
-# print(f"[DEBUG] {str(OKTA_CLIENT_REDIRECT_URI)}")
-# # https://<superset-webserver>/oauth-authorized/<provider-name>
-# # http://localhost:8088/oauth-authorized/okta
+# print(f"[CONFIG] {str(OKTA_CLIENT_REDIRECT_URI)}")
+# https://<superset-webserver>/oauth-authorized/<provider-name>
+# http://localhost:8088/oauth-authorized/okta
 # OAUTH_PROVIDERS = [
 #     {
 #         "name": "okta",
@@ -170,7 +118,7 @@ ADDITIONAL_MIDDLEWARE = [DebugMiddleware]
 #             "client_kwargs": {"scope": "openid profile email groups"},
 #             "access_token_method": "POST",  # HTTP Method to call access_token_url
 #             "access_token_params": {},  # Additional parameters for calls to access_token_url},
-#             "server_metadata_url": "https://ouryahoo.okta.com/oauth2/ausdqo06iBskQbfv0696/.well-known/openid-configuration",
+#             "server_metadata_url": "<REPLACED>/.well-known/openid-configuration",
 #         },
 #     }
 # ]
@@ -180,42 +128,82 @@ AUTH_USER_REGISTRATION = True
 
 # The default user self registration role
 AUTH_USER_REGISTRATION_ROLE = "Admin"
-print("[DEBUG] AUTH_USER_REGISTRATION_ROLE: " + str(AUTH_USER_REGISTRATION_ROLE))
+if isProd():
+    AUTH_USER_REGISTRATION_ROLE = "General"
+
+print("[CONFIG] AUTH_USER_REGISTRATION_ROLE: " + str(AUTH_USER_REGISTRATION_ROLE))
 
 # Initialize custom SSO security manager to use Okta
-CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
+# CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
 ######################### Metastore (MySQL) #########################
 
+SUPERSET_LOG_VIEW = False
 # The SQLAlchemy connection string.
 SQLALCHEMY_DATABASE_URI = buildSqlAlchemyUri()
-
+# SQLALCHEMY_ECHO = True
 SQLALCHEMY_ENGINE_OPTIONS = {
     # "echo": "debug",
     # "echo_pool": "debug",
-    # "hide_parameters": False,
-    "pool_recycle": 50,
-    "pool_timeout": 50,
+    "hide_parameters": False,
+    "pool_recycle": 55,
+    "pool_timeout": 55,
     "pool_size": 30,
-    "max_overflow": 10,
+    "max_overflow": 20,
+    # "pool_pre_ping": True,
+    # "pool_reset_on_return": None,
 }
 
+print(f"[CONFIG] SQLALCHEMY_ENGINE_OPTIONS: {SQLALCHEMY_ENGINE_OPTIONS}")
+# Deny all data URLs
+DATASET_IMPORT_ALLOWED_DATA_URLS = []
 
+
+def isDruidUri(uri):
+    return uri.drivername.__contains__("druid")
+
+
+def containsConnectArgs(params):
+    return params.__contains__("connect_args")
+
+
+def containsSsl(connect_args):
+    return connect_args.__contains__("ssl_client_cert")
+
+
+def convertListToTuple(list):
+    return tuple(list)
+
+
+# Druid connection bugfix
 def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
-    print(f"[DEBUG] DB_CONNECTION_MUTATOR: {uri} {params} {username} {source}")
+    print(f"[CONFIG] DB_CONNECTION_MUTATOR: {uri} {params} {username} {source}")
+    if isDruidUri(uri):
+        if containsConnectArgs(params):
+            connect_args = params["connect_args"]
+            if containsSsl(connect_args):
+                certs = params["connect_args"]["ssl_client_cert"]
+                params["connect_args"]["ssl_client_cert"] = convertListToTuple(certs)
     return uri, params
+
+
+def SQL_QUERY_MUTATOR(  # pylint: disable=invalid-name,unused-argument
+    sql, **kwargs: Any
+) -> str:
+    print(f"[CONFIG] kwargs: {kwargs}")
+    return f"{sql}"
 
 
 # @event.listens_for(Session, "after_attach")
 # def set_wait_timeout(session, transaction, connection):
-#     print("[DEBUG] after_attach: SET wait_timeout=300;")
+#     print("[CONFIG] after_attach: SET wait_timeout=300;")
 #     session.execute("SET wait_timeout=300;")
 
 
 ######################### Caching (Redis) #########################
 
 REDIS_ENABLED = env("REDIS_ENABLED")
-print("[DEBUG] REDIS_ENABLED: " + str(REDIS_ENABLED))
+print("[CONFIG] REDIS_ENABLED: " + str(REDIS_ENABLED))
 
 
 def redisEnabled():
@@ -232,7 +220,7 @@ if redisEnabled():
     )
 
     REDIS_DATABASE_URI = f"redis://{REDIS_HOST}:{REDIS_PORT}"
-    print("[DEBUG] REDIS_DATABASE_URI: " + str(REDIS_DATABASE_URI))
+    print("[CONFIG] REDIS_DATABASE_URI: " + str(REDIS_DATABASE_URI))
 
     CACHE_CONFIG = {
         "CACHE_TYPE": "RedisCache",
@@ -244,6 +232,7 @@ if redisEnabled():
     EXPLORE_FORM_DATA_CACHE_CONFIG = CACHE_CONFIG.copy()
     DATA_CACHE_CONFIG = CACHE_CONFIG.copy()
     THUMBNAIL_CACHE_CONFIG = CACHE_CONFIG.copy()
+    THUMBNAIL_CACHE_CONFIG["CACHE_KEY_PREFIX"] = "superset_thumbnail_"
 
 
 ######################### Celery Workers #########################
@@ -258,7 +247,7 @@ class CeleryConfig(object):
     )
     result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_RESULTS_DB}"
     log_level = "DEBUG"
-    worker_prefetch_multiplier = 10
+    worker_prefetch_multiplier = 1
     task_acks_late = True
     task_annotations = {
         "sql_lab.get_sql_results": {
@@ -292,53 +281,77 @@ CELERY_CONFIG = CeleryConfig
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = False
 
 THUMBNAIL_SELENIUM_USER = "admin"
-ALERT_REPORTS_EXECUTE_AS = [ExecutorType.SELENIUM]
+# ALERT_REPORTS_EXECUTE_AS = [ExecutorType.SELENIUM]
 
 WEBDRIVER_AUTH_FUNC = authDriver
+BROWSER_CONTEXT_AUTH_FUNC = None
 WEBDRIVER_BASEURL = env("WEBDRIVER_BASEURL")
 WEBDRIVER_BASEURL_USER_FRIENDLY = env("WEBDRIVER_BASEURL_USER_FRIENDLY")
+
+print(f"[CONFIG] WEBDRIVER_BASEURL: {WEBDRIVER_BASEURL}")
+print(f"[CONFIG] WEBDRIVER_BASEURL_USER_FRIENDLY: {WEBDRIVER_BASEURL_USER_FRIENDLY}")
+
 WEBDRIVER_CONFIGURATION = {
-    "service_log_path": "/app/geckodriver.log",
+    "service_log_path": "/app/logs/geckodriver.log",
 }
 WEBDRIVER_TYPE = "firefox"
+# WEBDRIVER_TYPE = "chrome"
 # WEBDRIVER_OPTION_ARGS = [
-#     # "--log=trace"
-#     # "--headless",
-#     # "--marionette",
+#     "--headless",
+#     "--single-process",
+#     "--marionette",
+#     "--log=trace",
 # ]
 
-SCREENSHOT_LOCATE_WAIT = int(timedelta(seconds=50).total_seconds())
-SCREENSHOT_LOAD_WAIT = int(timedelta(minutes=5).total_seconds())
-SCREENSHOT_SELENIUM_HEADSTART = 10
+SCREENSHOT_SELENIUM_RETRIES = 5
+SCREENSHOT_LOCATE_WAIT = int(timedelta(seconds=60).total_seconds())
+SCREENSHOT_LOAD_WAIT = int(timedelta(seconds=60).total_seconds())
+SCREENSHOT_SELENIUM_HEADSTART = 5
+SCREENSHOT_SELENIUM_ANIMATION_WAIT = 2
+
+# CSRF
+# Flask-WTF flag for CSRF
 WTF_CSRF_ENABLED = False
+# Add endpoints that need to be exempt from CSRF protection
+WTF_CSRF_EXEMPT_LIST = []
+# A CSRF token that expires in 1 year
+WTF_CSRF_TIME_LIMIT = 60 * 60 * 24 * 365
+TALISMAN_ENABLED = False
+
 SESSION_COOKIE_HTTPONLY = False  # Prevent cookie from being read by frontend JS?
-SESSION_COOKIE_SECURE = False  # Prevent cookie from being transmitted over non-tls?
+SESSION_COOKIE_SECURE = True  # Prevent cookie from being transmitted over non-tls?
 SESSION_COOKIE_SAMESITE = "Lax"  # One of [None, 'None', 'Lax', 'Strict']
 
-
-# print(f"[DEBUG] SLACK_API_TOKEN: {SLACK_API_TOKEN[:17]}**********")
+# SLACK_API_TOKEN = "slack_api_token"
+# print(f"[CONFIG] SLACK_API_TOKEN: {SLACK_API_TOKEN[:5]}**********")
 
 
 ### Misc. ###
-COMPRESS_REGISTER = False
+
+# If you're NOT using Gunicorn, you may want to disable the use of
+# flask-compress by setting COMPRESS_REGISTER = False
+COMPRESS_REGISTER = True
+if not usingGunicorn():
+    COMPRESS_REGISTER = False
+
+print(f"[CONFIG] COMPRESS_REGISTER: {COMPRESS_REGISTER}")
 
 if isProd():
     SSL_KEY_FILE = env("SSL_KEY_FILE")
     SSL_CERT_FILE = env("SSL_CERT_FILE")
     SSL_CERT_PATH = env("SSL_CERT_PATH")
 
-    print("[DEBUG] SSL_KEY_FILE: " + str(SSL_KEY_FILE))
-    print("[DEBUG] SSL_CERT_FILE: " + str(SSL_CERT_FILE))
-    print("[DEBUG] SSL_CERT_PATH: " + str(SSL_CERT_PATH))
+    print("[CONFIG] SSL_KEY_FILE: " + str(SSL_KEY_FILE))
+    print("[CONFIG] SSL_CERT_FILE: " + str(SSL_CERT_FILE))
+    print("[CONFIG] SSL_CERT_PATH: " + str(SSL_CERT_PATH))
 
 SQLLAB_CTAS_NO_LIMIT = True
 SQLLAB_TIMEOUT = 300
 
 SUPERSET_WEBSERVER_TIMEOUT = int(timedelta(minutes=5).total_seconds())
 
-# PREVIOUS_SECRET_KEY = 'secret'
-SUPERSET_SECRET_KEY = "secret"
-
+SUPERSET_SECRET_KEY = env("SUPERSET_SECRET_KEY")
+print(f"[CONFIG] SUPERSET_SECRET_KEY: {SUPERSET_SECRET_KEY[:4]}**********")
 
 # Uncomment to setup Your App name
 APP_NAME = "Superset"

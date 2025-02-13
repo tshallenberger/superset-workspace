@@ -64,3 +64,7 @@ docker inspect superset_network \
 | del(.Name, .IPv4Address)'
 
 ```
+
+
+## Init venv
+
