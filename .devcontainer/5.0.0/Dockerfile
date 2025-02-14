@@ -1,5 +1,5 @@
 # Apache Superset DevContainer v5.0.0
-ARG VERSION=5.0.0rc1-dev
+ARG VERSION=5.0.0rc1-py311
 ARG BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 
 # official registry/org
@@ -73,6 +73,8 @@ RUN . "$NVM_DIR/nvm.sh" && \
 
 
 # Extension packages
+# TODO: get this working in v5.0.0 with uv and venv
+
 # RUN pip install authlib \
 #   netaddr \
 #   gevent \
@@ -88,10 +90,5 @@ RUN . "$NVM_DIR/nvm.sh" && \
 #   redis \
 #   sqlalchemy-vertica-python \
 #   google
-
-
-
-# Install nvm/node (TODO: internalize this to Yahoo)
-
 
 EXPOSE ${SUPERSET_PORT}

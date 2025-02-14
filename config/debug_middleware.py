@@ -1,5 +1,5 @@
-import pprint
 from werkzeug.wrappers import Request
+import pprint
 
 
 class DebugMiddleware:

@@ -48,4 +48,5 @@ superset fab create-admin \
   --lastname Admin \
   --email admin@superset.com \
   --password admin
+superset load-examples
 ```
