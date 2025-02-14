@@ -15,8 +15,6 @@ from superset_utils import (
     env,
     usingGunicorn,
     isProd,
-    loadOktaClientId,
-    loadOktaClientSecret,
 )
 
 print("[CONFIG] Initializing...")
@@ -128,8 +126,6 @@ AUTH_USER_REGISTRATION = True
 
 # The default user self registration role
 AUTH_USER_REGISTRATION_ROLE = "Admin"
-if isProd():
-    AUTH_USER_REGISTRATION_ROLE = "General"
 
 print("[CONFIG] AUTH_USER_REGISTRATION_ROLE: " + str(AUTH_USER_REGISTRATION_ROLE))
 
@@ -192,12 +188,6 @@ def SQL_QUERY_MUTATOR(  # pylint: disable=invalid-name,unused-argument
 ) -> str:
     print(f"[CONFIG] kwargs: {kwargs}")
     return f"{sql}"
-
-
-# @event.listens_for(Session, "after_attach")
-# def set_wait_timeout(session, transaction, connection):
-#     print("[CONFIG] after_attach: SET wait_timeout=300;")
-#     session.execute("SET wait_timeout=300;")
 
 
 ######################### Caching (Redis) #########################

@@ -113,6 +113,7 @@ def buildSqlAlchemyUri():
     return SQLALCHEMY_DATABASE_URI
 
 
+# TODO: add secret fetching
 def loadOktaClientId():
     return "okta.client_id"
 

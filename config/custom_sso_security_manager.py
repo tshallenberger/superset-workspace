@@ -1,5 +1,5 @@
-import logging
 from superset.security import SupersetSecurityManager
+import logging
 
 
 class CustomSsoSecurityManager(SupersetSecurityManager):
