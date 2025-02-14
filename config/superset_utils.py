@@ -39,7 +39,6 @@ def env(var_name: str, default: Optional[str] = None) -> str:
 
 
 SUPERSET_ENV = env("SUPERSET_ENV")
-print("[CONFIG] SUPERSET_ENV: " + SUPERSET_ENV)
 
 
 def isDev():
@@ -58,17 +57,17 @@ def usingGunicorn():
     return isProd() or isStaging()
 
 
-PATH_TO_CERT = env("PATH_TO_CERT")
-PATH_TO_KEY = env("PATH_TO_KEY")
-PATH_TO_CA = env("PATH_TO_CA")
+# PATH_TO_CERT = env("PATH_TO_CERT")
+# PATH_TO_KEY = env("PATH_TO_KEY")
+# PATH_TO_CA = env("PATH_TO_CA")
 
-cert_exists = exists(PATH_TO_CERT)
-key_exists = exists(PATH_TO_KEY)
-ca_exists = exists(PATH_TO_CA)
+# cert_exists = exists(PATH_TO_CERT)
+# key_exists = exists(PATH_TO_KEY)
+# ca_exists = exists(PATH_TO_CA)
 
-print(f"[CONFIG] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
-print(f"[CONFIG] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
-print(f"[CONFIG] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
+# print(f"[CONFIG] PATH_TO_CERT: '{PATH_TO_CERT}' -- exists: {cert_exists}")
+# print(f"[CONFIG] PATH_TO_KEY: '{PATH_TO_KEY}' -- exists: {key_exists}")
+# print(f"[CONFIG] PATH_TO_CA: '{PATH_TO_CA}' -- exists: {ca_exists}")
 
 
 # authdriver used for headless auth (alerts/reports, thumbnails, etc)
@@ -101,14 +100,14 @@ def buildSqlAlchemyUri():
         DATABASE_PORT,
         DATABASE_NAME,
     )
-    if isProd():
-        # add ssl_cert, ssl_key, ssl_ca cert paths to the sqlalchemy database uri
-        SQLALCHEMY_DATABASE_URI = "%s?ssl_cert=%s&ssl_key=%s&ssl_ca=%s" % (
-            SQLALCHEMY_DATABASE_URI,
-            PATH_TO_CERT,
-            PATH_TO_KEY,
-            PATH_TO_CA,
-        )
+    # if isProd():
+    #     # add ssl_cert, ssl_key, ssl_ca cert paths to the sqlalchemy database uri
+    #     SQLALCHEMY_DATABASE_URI = "%s?ssl_cert=%s&ssl_key=%s&ssl_ca=%s" % (
+    #         SQLALCHEMY_DATABASE_URI,
+    #         PATH_TO_CERT,
+    #         PATH_TO_KEY,
+    #         PATH_TO_CA,
+    #     )
     print("[CONFIG] SQLALCHEMY_DATABASE_URI: " + str(SQLALCHEMY_DATABASE_URI))
     return SQLALCHEMY_DATABASE_URI
 
