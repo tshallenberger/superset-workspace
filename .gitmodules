@@ -1,3 +1,3 @@
 [submodule "superset"]
 	path = superset
-	url = https://github.com/tshal0/superset.git
+	url = https://github.com/tshallenberger/superset.git
