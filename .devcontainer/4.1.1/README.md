@@ -13,6 +13,7 @@ Before opening the devcontainer, your Rancher Desktop preferences should be:
 - Kubernetes # Disable Kubernetes, Disable Traefik
 
 ```
+
 ## MySQL (Superset DB)
 
 When booting up the container, you should be able to access an empty MySQL container with the following credentials:
