@@ -20,7 +20,10 @@ Once the container is built, follow these steps to pull/build Superset:
 # pull submodule
 git submodule update --init
 # PIP install superset
-cd /workspace/superset && pip install -e .
+uv venv .venv
+source .venv/bin/activate
+uv pip install -e superset/
+uv pip install mysql-connector-python authlib
 # NPM install
 cd /workspace/superset/superset-frontend && npm ci && npm run build
 
