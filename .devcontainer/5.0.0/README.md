@@ -1,4 +1,4 @@
-# Superset 4.1.1 DevContainer
+# Superset 5.0.0 DevContainer
 
 ## Pre-init
 
