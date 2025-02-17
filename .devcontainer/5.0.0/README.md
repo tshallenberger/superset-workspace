@@ -1,4 +1,4 @@
-# Superset 4.1.1 DevContainer
+# Superset 5.0.0 DevContainer
 
 ## Pre-init
 
@@ -36,7 +36,11 @@ MySQL [(none)]> SHOW DATABASES;
 
 ## Setup
 
-```bash
+Before opening in devcontainer, run the `generate_env.sh` script to generate an .env file with some default env variables.
+
+```bash 
+cd /workspace
+uv venv .venv
 source .venv/bin/activate
 uv pip install -e superset/
 uv pip install mysql-connector-python authlib
