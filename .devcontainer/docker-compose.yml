@@ -20,6 +20,7 @@ services:
     init: true
     volumes:
       - ..:/workspace
+      - ../../../.git/modules/github/superset-workspace:/.git/modules/github/superset-workspace
       - $EXPORTS:/app/exports:cached
       # - $CERTS:/app/certs:cached
       # - $TLS:/app/tls:cached # only mount when testing SSL
